@@ -57,7 +57,7 @@ export default function HeroSection() {
             <h1
               className="text-5xl md:text-6xl font-bold text-foreground leading-tight text-balance overflow-hidden"
               style={{
-                transform: `translateX(${Math.max(-100, -scrollY * 0.8)}px)`,
+                transform: `translateX(${Math.max(-100, -scrollY * 0.6)}px)`,
               }}
             >
               Plan Your Perfect Event.
@@ -66,16 +66,22 @@ export default function HeroSection() {
             <p
               className="text-base text-muted-foreground leading-relaxed max-w-md"
               style={{
-                transform: `translateY(${scrollY * 0.15}px) translateX(${scrollY * 0.1}px)`,
+                transform: `translateY(${scrollY * 0.1}px) translateX(${scrollY * 0.1}px)`,
                 opacity: Math.min(1, 0.8 + scrollY / 1500),
               }}
             >
               Connect with premium event organizers for birthdays, weddings, baby showers, and celebrations. Create
               unforgettable moments effortlessly.
             </p>
+             
+           
 
             <Link href="/book">
-              <Button size="lg" className="bg-primary text-white hover:bg-primary/90 rounded-full px-8">
+              <Button size="lg" className="bg-primary text-white hover:bg-primary/90 rounded-full px-8"
+               
+              style={{
+                transform: `translateX(${Math.max(-100, -scrollY * 0.8)}px)`,
+              }}>
                 Book Event
                 <ChevronRight className="ml-2" size={18} />
               </Button>
