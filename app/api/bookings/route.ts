@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
       bookings = await bookingsCollection.find({}).sort({ createdAt: -1 }).toArray()
     } else {
       bookings = await bookingsCollection
-        .find({ userId: new ObjectId(userId) })
+        .find({ userId: userId }) // Treat as string (email)
         .sort({ createdAt: -1 })
         .toArray()
     }
@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
       bookings.map((booking) => ({
         ...booking,
         _id: booking._id.toString(),
-        userId: booking.userId.toString(),
+        userId: booking.userId, // Already string
       })),
     )
   } catch (error) {
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
     const bookingsCollection = await getBookingsCollection()
 
     const result = await bookingsCollection.insertOne({
-      userId: new ObjectId(userId),
+      userId: userId, // Insert as string (email)
       eventType: bookingData.eventType,
       eventName: bookingData.eventName,
       guestCount: bookingData.guestCount,
@@ -112,7 +112,7 @@ export async function DELETE(request: NextRequest) {
     const bookingsCollection = await getBookingsCollection()
     const result = await bookingsCollection.deleteOne({
       _id: new ObjectId(bookingId),
-      userId: new ObjectId(userId),
+      userId: userId, // String for ownership check
     })
 
     console.log("[v0] Booking deleted:", bookingId)
