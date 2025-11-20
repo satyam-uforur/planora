@@ -1,12 +1,14 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Navigation from "@/components/navigation"
 import Footer from "@/components/footer"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
 import { useAuth } from "@/context/auth-context"
+import { useSession } from "next-auth/react"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
 
 type BookingStep = "event-type" | "details" | "date-time" | "organizer" | "confirmation"
@@ -23,7 +25,9 @@ interface BookingData {
 }
 
 export default function BookEvent() {
-  const { user, isLoading } = useAuth()
+  const { user: customUser, isLoading: customLoading } = useAuth()
+  const { data: session, status } = useSession()
+  const router = useRouter()
   const [step, setStep] = useState<BookingStep>("event-type")
   const [bookingData, setBookingData] = useState<BookingData>({
     eventType: "",
@@ -37,7 +41,31 @@ export default function BookEvent() {
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  if (isLoading) {
+  // Unified user (same as dashboard)
+  const user =
+    customUser ||
+    (session?.user
+      ? {
+          userId: session.user.email || "",
+          email: session.user.email || "",
+          username: session.user.name || "",
+          name: session.user.name || "",
+          role: "user" as const,
+          avatar: session.user.image || "/placeholder.svg",
+        }
+      : null)
+
+  // Redirect if no user (handles both auth types)
+  useEffect(() => {
+    if (status === "loading" || customLoading) return // Wait for both
+    if (!user) {
+      console.log("[BookEvent] No unified user, redirecting to /login")
+      router.push("/login")
+    }
+  }, [status, customLoading, user, router])
+
+  // Show loading if either is loading
+  if (status === "loading" || customLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
@@ -94,6 +122,8 @@ export default function BookEvent() {
         headers: {
           "Content-Type": "application/json",
           "x-user-id": user.userId,
+          // Add custom token if applicable (for consistency with dashboard)
+          ...(customUser && { Authorization: `Bearer ${localStorage.getItem('token')}` }),
         },
         body: JSON.stringify(bookingData),
       })
@@ -103,9 +133,9 @@ export default function BookEvent() {
       }
 
       alert("Booking submitted successfully! Our team will contact you soon.")
-      window.location.href = "/dashboard"
+      router.push("/dashboard") // Use router.push for SPA navigation
     } catch (error) {
-      console.error("[v0] Booking error:", error)
+      console.error("[BookEvent] Booking error:", error)
       alert("Failed to submit booking. Please try again.")
     } finally {
       setIsSubmitting(false)
