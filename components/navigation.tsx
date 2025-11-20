@@ -84,7 +84,7 @@ export default function Navigation() {
                     )}
 
                     {/* Both get Sign Out, but different methods */}
-                    <button
+                    {/* <button
                       onClick={() => {
                         setUserMenuOpen(false)
                         if (isGoogleUser) signOut()
@@ -94,7 +94,7 @@ export default function Navigation() {
                       className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-muted"
                     >
                       Sign Out
-                    </button>
+                    </button> */}
                   </div>
                 )}
               </div>
