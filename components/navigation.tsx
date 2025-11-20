@@ -11,8 +11,8 @@ export default function Navigation() {
   const [isOpen, setIsOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
 
-  const { user: contextUser } = useAuth()           // Your manual auth
-  const { data: session } = useSession()            // NextAuth (Google) session
+  const { user: contextUser, logout: manualLogout } = useAuth()  // Assuming logout function is exposed in context
+  const { data: session } = useSession()                         // NextAuth (Google) session
 
   // Determine which user is actually logged in
   const isGoogleUser = !!session?.user
@@ -22,6 +22,19 @@ export default function Navigation() {
   const userName = activeUser?.name || activeUser?.email || "User"
 
   const dashboardLink = contextUser?.role === "admin" ? "/admin" : "/dashboard"
+
+  // Unified sign out handler
+  const handleSignOut = () => {
+    setUserMenuOpen(false) // Close menu if open
+    setIsOpen(false)       // Close mobile menu if open
+
+    if (isGoogleUser) {
+      signOut({ callbackUrl: '/' }) // Redirect to home after sign out; adjust as needed
+    } else if (isManualUser && manualLogout) {
+      manualLogout() // Call manual logout from context
+    }
+    // If both (unlikely), handle both, but priority to Google as per logic
+  }
 
   return (
     <nav className="fixed w-full top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border/40">
@@ -83,18 +96,13 @@ export default function Navigation() {
                       </>
                     )}
 
-                    {/* Both get Sign Out, but different methods */}
-                    {/* <button
-                      onClick={() => {
-                        setUserMenuOpen(false)
-                        if (isGoogleUser) signOut()
-                        // Add your manual logout here if needed
-                        // e.g., logout() from context
-                      }}
+                    {/* Both get Sign Out, unified handler */}
+                    <button
+                      onClick={handleSignOut}
                       className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-muted"
                     >
                       Sign Out
-                    </button> */}
+                    </button>
                   </div>
                 )}
               </div>
@@ -137,7 +145,7 @@ export default function Navigation() {
                   </Link>
                 )}
                 <button
-                  onClick={() => isGoogleUser && signOut()}
+                  onClick={handleSignOut}
                   className="w-full text-left py-2 text-red-600 font-medium"
                 >
                   Sign Out
