@@ -80,7 +80,7 @@ export default function HeroSection() {
               <Button size="lg" className="bg-primary text-white hover:bg-primary/90 rounded-full px-8"
                
               style={{
-                transform: `translateX(${Math.max(-100, -scrollY * 0.6)}px)`,
+                transform: `translateX(${Math.max(-100, -scrollY * 0.2)}px)`,
               }}>
                 Book Event
                 <ChevronRight className="ml-2" size={18} />
