@@ -1,6 +1,7 @@
 "use client"
 
 import { useAuth } from "@/context/auth-context"
+import { useState } from "react"
 import Navigation from "@/components/navigation"
 import Footer from "@/components/footer"
 import { Button } from "@/components/ui/button"
@@ -74,6 +75,7 @@ const pricingPlans = [
 
 export default function PricingPage() {
   const { user } = useAuth()
+  const [selectedIndex, setSelectedIndex] = useState(1) // Default to Standard as featured
 
   return (
     <div className="min-h-screen bg-background">
@@ -87,56 +89,54 @@ export default function PricingPage() {
             </p>
           </div>
 
-          {!user && (
-            <div className="mb-12 p-6 bg-accent/20 border border-accent rounded-lg text-center">
-              <p className="text-foreground font-medium mb-4">Sign in to book and see pricing details</p>
-              <Link href="/login">
-                <Button>Sign In Now</Button>
-              </Link>
-            </div>
-          )}
+         
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {pricingPlans.map((plan, index) => (
-              <Card
-                key={index}
-                className={`p-6 flex flex-col h-full transition-all ${
-                  plan.featured ? "ring-2 ring-primary lg:scale-105 shadow-lg" : "hover:shadow-lg"
-                }`}
-              >
-                {plan.featured && (
-                  <div className="text-xs font-bold text-primary bg-primary/10 px-3 py-1 rounded-full w-fit mb-4">
-                    MOST POPULAR
+            {pricingPlans.map((plan, index) => {
+              const mailtoLink = `mailto:satyamtiwari.co22d2@scet.ac.in?subject=Pricing Inquiry: ${plan.name} Plan&body=Hi, I'm interested in the ${plan.name} plan (₹${plan.price.replace(/[^\d]/g, '')} onwards). Please provide more details on pricing and availability. Best regards, [Your Name]`
+              const isSelected = selectedIndex === index
+              return (
+                <Card
+                  key={index}
+                  className={`p-6 flex flex-col h-full transition-all cursor-pointer ${
+                    isSelected ? "ring-2 ring-primary lg:scale-105 shadow-lg" : "hover:shadow-lg"
+                  }`}
+                  onClick={() => setSelectedIndex(index)}
+                >
+                  {isSelected && (
+                    <div className="text-xs font-bold text-primary bg-primary/10 px-3 py-1 rounded-full w-fit mb-4">
+                      SELECTED
+                    </div>
+                  )}
+                  <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
+                  <div className="mb-2">
+                    <span className="text-4xl font-bold">{plan.price}</span>
+                    {!plan.price.includes("+") && <span className="text-muted-foreground ml-2">onwards</span>}
                   </div>
-                )}
-                <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
-                <div className="mb-2">
-                  <span className="text-4xl font-bold">{plan.price}</span>
-                  {!plan.price.includes("+") && <span className="text-muted-foreground ml-2">onwards</span>}
-                </div>
-                <p className="text-sm text-muted-foreground mb-6">{plan.description}</p>
+                  <p className="text-sm text-muted-foreground mb-6">{plan.description}</p>
 
-                <div className="mb-8 flex-grow">
-                  <ul className="space-y-3">
-                    {plan.features.map((feature, i) => (
-                      <li key={i} className="flex gap-2 text-sm">
-                        <Check size={18} className="text-primary flex-shrink-0" />
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                  <div className="mb-8 flex-grow">
+                    <ul className="space-y-3">
+                      {plan.features.map((feature, i) => (
+                        <li key={i} className="flex gap-2 text-sm">
+                          <Check size={18} className="text-primary flex-shrink-0" />
+                          <span>{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
 
-                <div className="mb-4">
-                  <p className="text-xs font-semibold text-muted-foreground mb-2">BEST FOR</p>
-                  <p className="text-sm text-foreground">{plan.bestFor}</p>
-                </div>
+                  <div className="mb-4">
+                    <p className="text-xs font-semibold text-muted-foreground mb-2">BEST FOR</p>
+                    <p className="text-sm text-foreground">{plan.bestFor}</p>
+                  </div>
 
-                <Button className="w-full" variant={plan.featured ? "default" : "outline"} disabled={!user}>
-                  {plan.cta}
-                </Button>
-              </Card>
-            ))}
+                  <Button asChild className="w-full" variant={isSelected ? "default" : "outline"}>
+                    <a href={mailtoLink}>{plan.cta}</a>
+                  </Button>
+                </Card>
+              )
+            })}
           </div>
 
           {/* Add-ons Section */}
@@ -150,12 +150,17 @@ export default function PricingPage() {
                 { name: "Return Gift Curation", icon: "🎁" },
                 { name: "Custom Invitations", icon: "✉️" },
                 { name: "LED Screens & Lighting", icon: "💡" },
-              ].map((addon, i) => (
-                <Card key={i} className="p-6 text-center hover:shadow-lg transition-all">
-                  <div className="text-4xl mb-4">{addon.icon}</div>
-                  <h4 className="font-bold">{addon.name}</h4>
-                </Card>
-              ))}
+              ].map((addon, i) => {
+                const mailtoLink = `mailto:satyamtiwari@scet.ac.in?subject=Add-On Inquiry: ${addon.name}&body=Hi, I'm interested in the ${addon.name} add-on service. Please provide pricing and details. Best regards, [Your Name]`
+                return (
+                  <Card key={i} className="p-6 text-center hover:shadow-lg transition-all cursor-pointer">
+                    <a href={mailtoLink}>
+                      <div className="text-4xl mb-4">{addon.icon}</div>
+                      <h4 className="font-bold">{addon.name}</h4>
+                    </a>
+                  </Card>
+                )
+              })}
             </div>
           </div>
         </div>
