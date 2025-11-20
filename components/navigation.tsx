@@ -85,18 +85,17 @@ export default function Navigation() {
                         >
                           {contextUser?.role === "admin" ? "Admin Dashboard" : "My Dashboard"}
                         </Link>
-                        <Link
-                          href="/book"
-                          onClick={() => setUserMenuOpen(false)}
-                          className="block px-4 py-2.5 text-sm hover:bg-muted"
-                        >
-                          My Bookings
-                        </Link>
+                       
                         <div className="h-px bg-border my-1" />
                       </>
                     )}
 
                     {/* Both get Sign Out, unified handler */}
+                     <Link
+                          href={dashboardLink}
+                          onClick={() => setUserMenuOpen(false)}
+                          className="block px-4 py-2.5 text-sm hover:bg-muted"
+                        >My Dasboard</Link>
                     <button
                       onClick={handleSignOut}
                       className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-muted"
