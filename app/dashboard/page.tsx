@@ -8,7 +8,7 @@ import Navigation from "@/components/navigation"
 import Footer from "@/components/footer"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { Calendar, Users, MapPin, Clock, MoreVertical, Mail, Trash2, Edit2 } from "lucide-react"
+import { Calendar, Users, MapPin, Clock, MoreVertical, Mail, Trash2, Edit2, Plus } from "lucide-react"
 import { useAuth } from "@/context/auth-context"
 
 interface Booking {
@@ -45,6 +45,13 @@ export default function Dashboard() {
         }
       : null)
 
+  // Debug log for user type (remove in prod)
+  useEffect(() => {
+    if (user) {
+      console.log("[Dashboard] User loaded:", { id: user.userId, type: customUser ? "custom" : "google", email: user.email })
+    }
+  }, [user, customUser])
+
   useEffect(() => {
     if (status === "unauthenticated" && !customUser) {
       router.push("/login")
@@ -59,24 +66,26 @@ export default function Dashboard() {
         const response = await fetch("/api/bookings", {
           headers: {
             "x-user-id": user.userId,
+            ...(customUser && { Authorization: `Bearer ${localStorage.getItem('token')}` }),
           },
         })
 
         if (response.ok) {
           const data = await response.json()
           setBookings(data)
+        } else {
+          console.warn("[Dashboard] Fetch bookings failed:", response.status, "for user:", user.userId)
         }
       } catch (error) {
-        console.log("[v0] Fetch bookings error:", error)
+        console.error("[Dashboard] Fetch bookings error:", error, "for user:", user.userId)
       } finally {
         setIsLoading(false)
       }
     }
 
     fetchBookings()
-  }, [user])
+  }, [user, customUser])
 
-  // Fixed: Only show loading if NextAuth is loading AND no custom user (avoids infinite loading on unauthenticated)
   if (status === "loading" && !customUser) {
     return (
       <div className="min-h-screen bg-background">
@@ -119,6 +128,7 @@ export default function Dashboard() {
         method: "DELETE",
         headers: {
           "x-user-id": user.userId,
+          ...(customUser && { Authorization: `Bearer ${localStorage.getItem('token')}` }),
         },
       })
 
@@ -127,39 +137,37 @@ export default function Dashboard() {
         alert("Event deleted successfully")
       }
     } catch (error) {
-      console.log("[v0] Delete error:", error)
+      console.error("[Dashboard] Delete error:", error)
       alert("Failed to delete event")
     }
   }
 
-  // Updated: Improved handleLogout with proper custom logout call, error handling, and forced redirect
-  // For form-based (custom auth), this now properly calls customLogout and redirects
   const handleLogout = async () => {
     try {
       if (session) {
-        // NextAuth logout
         const { signOut } = await import("next-auth/react")
         await signOut({ callbackUrl: "/login" })
       } else if (customUser) {
-        // Custom auth (form-based) logout - now actually calling it
-        await customLogout() // This should clear custom auth state (e.g., localStorage, context)
+        await customLogout()
       }
 
-      // Force clear local state and redirect (helps with any lag in state updates)
       setBookings([])
-      setIsLoading(true) // Temporarily show loading to smooth transition
+      setIsLoading(true)
       router.push("/login")
-      router.refresh() // Refresh router state for full revalidation
+      router.refresh()
     } catch (error) {
-      console.error("[v0] Logout error:", error)
-      // Fallback: Hard redirect for form-based or any failures
+      console.error("[Dashboard] Logout error:", error)
       if (customUser) {
-        // Manually clear if customLogout failed
-        localStorage.removeItem("token") // Adjust key based on your auth impl
-        // Or any other manual clear (cookies, etc.)
+        localStorage.removeItem("token")
       }
       window.location.href = "/login"
     }
+  }
+
+  // Reliable navigation handler for buttons
+  const handleNavigateToBook = () => {
+    console.log("[Dashboard] Navigating to /book for user:", user.userId, "type:", customUser ? "custom" : "google")
+    router.push("/book")
   }
 
   const upcomingBookings = bookings.filter((b) => new Date(b.date) > new Date())
@@ -244,9 +252,10 @@ export default function Dashboard() {
                 {displayBookings.length === 0 ? (
                   <Card className="p-12 text-center">
                     <p className="text-muted-foreground mb-4">No {activeTab} bookings yet</p>
-                    <Link href="/book">
-                      <Button className="bg-primary hover:bg-primary/90">Book Your First Event</Button>
-                    </Link>
+                    <Button onClick={handleNavigateToBook} className="bg-primary hover:bg-primary/90">
+                      <Plus className="mr-2 h-4 w-4" />
+                      Book Your First Event
+                    </Button>
                   </Card>
                 ) : (
                   displayBookings.map((booking) => (
@@ -329,16 +338,13 @@ export default function Dashboard() {
                 )}
               </div>
 
-              {bookings.length === 0 && (
-                <div className="mt-12 text-center">
-                  <p className="text-muted-foreground mb-4">Ready to book your first event?</p>
-                  <Link href="/book">
-                    <Button size="lg" className="bg-primary hover:bg-primary/90">
-                      Book a New Event
-                    </Button>
-                  </Link>
-                </div>
-              )}
+              {/* Always show "Book a New Event" button below the list */}
+              <div className="mt-12 text-center border-t pt-8">
+                <Button size="lg" onClick={handleNavigateToBook} variant="outline" className="bg-primary hover:bg-primary/90">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Book a New Event
+                </Button>
+              </div>
             </>
           )}
         </div>
